@@ -16,8 +16,20 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from rest_framework import routers
+from core.views import BookViewSet
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from django.conf import settings
+from django.conf.urls.static import static
+
+router = routers.DefaultRouter()
+router.register(r'books', BookViewSet, basename='books')
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-]
+    path('admin/', admin.site.urls),
+    path('api/', include(router.urls)),
+    path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # add other auth/register endpoints (djoser or custom)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
