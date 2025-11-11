@@ -131,6 +131,7 @@ MEDIA_ROOT = BASE_DIR / "media"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",   # web dev if used
     "http://127.0.0.1:8000",
+    "http://127.0.0.1:5500",
     "http://10.0.2.2:8080",    # Android emulator -> example
 ]
 # or allow all during dev (not for production)
