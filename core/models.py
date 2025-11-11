@@ -10,7 +10,12 @@ class Book(models.Model):
     description = models.TextField(blank=True)
     isbn = models.CharField(max_length=20, blank=True)
     cover = models.ImageField(upload_to="book_covers/", null=True, blank=True)
-    available_for = models.JSONField(default=dict)  # e.g. {"borrow": True, "exchange": False, "donate": False}
+    available_for = models.CharField(max_length=50, choices=[
+    ('rent', 'Rent'),
+    ('exchange', 'Exchange'),
+    ('donate', 'Donate')
+])
+
     location_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     location_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
