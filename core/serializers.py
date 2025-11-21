@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Book, Feedback, Report, Transaction, Wishlist
+from .models import Announcement, Book, Feedback, Report, Transaction, Wishlist
 
 class BookSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
@@ -32,3 +32,9 @@ class ReportSerializer(serializers.ModelSerializer):
         model = Report
         fields = "__all__"
         read_only_fields = ['reporter', 'status', 'admin_remarks']
+
+class AnnouncementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Announcement
+        fields = "__all__"
+        read_only_fields = ['created_by']

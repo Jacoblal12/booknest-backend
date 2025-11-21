@@ -174,3 +174,19 @@ class Report(models.Model):
     def __str__(self):
         target = self.reported_book.title if self.reported_book else self.reported_user.username
         return f"Report on {target} ({self.status})"
+
+class Announcement(models.Model):
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="announcements")
+    
+    is_active = models.BooleanField(default=True)  # admins can toggle visibility
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title

@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
 from django.db import models
-from .models import Book, Feedback, Report, Wishlist
-from .serializers import BookSerializer, FeedbackSerializer, ReportSerializer, WishlistSerializer
+from .models import Announcement, Book, Feedback, Report, Wishlist
+from .serializers import AnnouncementSerializer, BookSerializer, FeedbackSerializer, ReportSerializer, WishlistSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Book, BookRequest, Transaction
 from .serializers import BookSerializer, TransactionSerializer
@@ -81,3 +81,16 @@ class ReportViewSet(viewsets.ModelViewSet):
 
         # Regular user sees only THEIR reports
         return Report.objects.filter(reporter=user)
+
+class AnnouncementViewSet(viewsets.ModelViewSet):
+    queryset = Announcement.objects.filter(is_active=True).order_by('-created_at')
+    serializer_class = AnnouncementSerializer
+
+    def get_permissions(self):
+        # admins can CRUD, users can only read
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAdminUser()]
+        return [permissions.AllowAny()]
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
