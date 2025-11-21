@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 from django.contrib import admin
-from .models import Book, Transaction, Wishlist
+from .models import Book, Feedback, Transaction, Wishlist
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
@@ -13,3 +13,5 @@ class BookAdmin(admin.ModelAdmin):
 admin.site.register(Transaction)
 
 admin.site.register(Wishlist)
+
+admin.site.register(Feedback)

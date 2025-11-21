@@ -2,8 +2,8 @@ from django.shortcuts import render
 from rest_framework import viewsets, permissions
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django.db import models
-from .models import Book, Wishlist
-from .serializers import BookSerializer, WishlistSerializer
+from .models import Book, Feedback, Wishlist
+from .serializers import BookSerializer, FeedbackSerializer, WishlistSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Book, BookRequest, Transaction
 from .serializers import BookSerializer, TransactionSerializer
@@ -49,3 +49,17 @@ class WishlistViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         # Only return the logged-in user's wishlist
         return Wishlist.objects.filter(user=self.request.user)
+
+class FeedbackViewSet(viewsets.ModelViewSet):
+    queryset = Feedback.objects.all().order_by('-created_at')
+    serializer_class = FeedbackSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def get_queryset(self):
+        book_id = self.request.query_params.get('book')
+        if book_id:
+            return Feedback.objects.filter(book=book_id).order_by('-created_at')
+        return Feedback.objects.filter(user=self.request.user)
