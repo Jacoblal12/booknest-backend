@@ -133,3 +133,44 @@ class Feedback(models.Model):
 
     def __str__(self):
         return f"{self.user.username} → {self.book.title} ({self.rating}★)"
+
+class Report(models.Model):
+    REPORT_TYPES = [
+        ('book', 'Book'),
+        ('user', 'User'),
+    ]
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('reviewed', 'Reviewed'),
+        ('resolved', 'Resolved'),
+    ]
+
+    report_type = models.CharField(max_length=20, choices=REPORT_TYPES)
+
+    reported_book = models.ForeignKey(
+        Book, on_delete=models.SET_NULL, null=True, blank=True, related_name="reports"
+    )
+
+    reported_user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="reported_against"
+    )
+
+    reporter = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="reports_made"
+    )
+
+    reason = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    admin_remarks = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        target = self.reported_book.title if self.reported_book else self.reported_user.username
+        return f"Report on {target} ({self.status})"
