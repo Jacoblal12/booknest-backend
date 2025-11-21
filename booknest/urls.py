@@ -23,15 +23,18 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.conf import settings
 from django.conf.urls.static import static
 from accounts.views import ProfileViewSet
-router.register(r'profile', ProfileViewSet, basename='profile')
 
+# Create router FIRST
 router = routers.DefaultRouter()
+
+# Register API routes
 router.register(r'books', BookViewSet, basename='books')
+router.register(r'profile', ProfileViewSet, basename='profile')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    # add other auth/register endpoints (djoser or custom)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
