@@ -67,3 +67,33 @@ class BookRequest(models.Model):
 
     def __str__(self):
         return f"{self.requester.username} → {self.book.title} ({self.request_type})"
+
+class Transaction(models.Model):
+    TRANSACTION_TYPES = [
+        ('rent', 'Rent'),
+        ('exchange', 'Exchange'),
+        ('donate', 'Donate'),
+    ]
+
+    STATUS_CHOICES = [
+        ('received', 'Received'),
+        ('returned', 'Returned'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="transactions")
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="given_transactions")
+    borrower = models.ForeignKey(User, on_delete=models.CASCADE, related_name="received_transactions")
+
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
+
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='received')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.book.title} — {self.transaction_type} ({self.status})"
