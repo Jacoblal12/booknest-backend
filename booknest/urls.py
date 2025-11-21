@@ -22,6 +22,8 @@ from core.views import BookViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.conf import settings
 from django.conf.urls.static import static
+from accounts.views import ProfileViewSet
+router.register(r'profile', ProfileViewSet, basename='profile')
 
 router = routers.DefaultRouter()
 router.register(r'books', BookViewSet, basename='books')
