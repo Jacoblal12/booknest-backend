@@ -32,10 +32,47 @@ class BookSerializer(serializers.ModelSerializer):
         return obj.requests.count()
 
 class BookRequestSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = BookRequest
         fields = "__all__"
-        read_only_fields = ['requester', 'status']
+        read_only_fields = ["requester", "status"]
+
+    def validate(self, data):
+        user = self.context['request'].user
+        book = data['book']
+        request_type = data['request_type']
+
+        # 1. Prevent requesting your own book
+        if book.owner == user:
+            raise serializers.ValidationError(
+                {"error": "You cannot request your own book."}
+            )
+
+        # 2. Prevent request_type mismatch
+        if book.available_for != request_type:
+            raise serializers.ValidationError(
+                {"error": f"This book is only available for: {book.available_for}."}
+            )
+
+        # 3. Prevent duplicate PENDING requests
+        existing = BookRequest.objects.filter(
+            book=book,
+            requester=user,
+            status="pending"
+        ).exists()
+
+        if existing:
+            raise serializers.ValidationError(
+                {"error": "You already have a pending request for this book."}
+            )
+
+        return data
+
+    def create(self, validated_data):
+        validated_data['requester'] = self.context['request'].user
+        return super().create(validated_data)
+
 
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
