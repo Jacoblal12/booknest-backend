@@ -58,6 +58,14 @@ class BookRequest(models.Model):
     # NOW perfectly aligned with Book.available_for
     request_type = models.CharField(max_length=20, choices=REQUEST_TYPES)
 
+    exchange_book = models.ForeignKey(
+    'Book',
+    on_delete=models.CASCADE,
+    null=True,
+    blank=True,
+    related_name="exchange_requests",
+    help_text="Required only for exchange requests")
+
     message = models.TextField(blank=True)
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
