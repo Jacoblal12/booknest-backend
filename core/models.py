@@ -100,8 +100,8 @@ class Transaction(models.Model):
 
 class Wishlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="wishlist")
-    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="wishlisted_by")
-
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name="wishlist_users")
+    
     added_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
