@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     "django_filters",
 
     # local
-    "core",
+    "core.apps.CoreConfig",
     "accounts.apps.AccountsConfig",
 ]
 

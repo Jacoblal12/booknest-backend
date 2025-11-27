@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from core.views import AnnouncementViewSet, BookViewSet, FeedbackViewSet, ReportViewSet, TransactionViewSet, WishlistViewSet
+from core.views import AnnouncementViewSet, BookRequestViewSet, BookViewSet, FeedbackViewSet, ReportViewSet, TransactionViewSet, WishlistViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -35,6 +35,7 @@ router.register(r'wishlist', WishlistViewSet, basename='wishlist')
 router.register(r'feedback', FeedbackViewSet, basename='feedback')
 router.register(r'reports', ReportViewSet, basename='reports')
 router.register(r'announcements', AnnouncementViewSet, basename='announcements')
+router.register(r'bookrequests', BookRequestViewSet, basename='bookrequests')
 
 urlpatterns = [
     path('admin/', admin.site.urls),

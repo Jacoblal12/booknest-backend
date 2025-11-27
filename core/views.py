@@ -5,7 +5,7 @@ from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.postgres.search import TrigramSimilarity
 from .models import Announcement, Book, Feedback, Report, Wishlist
-from .serializers import AnnouncementSerializer, BookSerializer, FeedbackSerializer, ReportSerializer, WishlistSerializer
+from .serializers import AnnouncementSerializer, BookRequestSerializer, BookSerializer, FeedbackSerializer, ReportSerializer, WishlistSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -55,7 +55,64 @@ class BookViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(books, many=True)
         return Response(serializer.data)
+    
+    # ---------------------------------------------------
+    # My books endpoint(for flutter interface)
+    # ---------------------------------------------------
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated], url_path='my')
+    def my_books(self, request):
+        user = request.user
+        qs = Book.objects.filter(owner=user).order_by('-created_at')
 
+        # Apply performance optimization
+        qs = qs.select_related('owner').prefetch_related('feedbacks', 'requests')
+
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data)
+    
+    # ---------------------------------------------------
+    # My requests endpoint(for flutter interface)
+    # ---------------------------------------------------
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated], url_path='my')
+    def my_requests(self, request):
+        user = request.user
+
+        qs = BookRequest.objects.filter(
+            models.Q(requester=user) |
+            models.Q(book__owner=user)
+        ).select_related('book', 'requester', 'book__owner').order_by('-created_at')
+
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = BookRequestSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = BookRequestSerializer(qs, many=True)
+        return Response(serializer.data)
+
+class BookRequestViewSet(viewsets.ModelViewSet):
+    ...
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated], url_path='my')
+    def my_requests(self, request):
+        user = request.user
+
+        qs = BookRequest.objects.filter(
+            models.Q(requester=user) |
+            models.Q(book__owner=user)
+        ).select_related('book', 'requester', 'book__owner').order_by('-created_at')
+
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = BookRequestSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = BookRequestSerializer(qs, many=True)
+        return Response(serializer.data)
 
 class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all().order_by('-created_at')
@@ -68,6 +125,26 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return Transaction.objects.filter(
             models.Q(owner=user) | models.Q(borrower=user)
         )
+    
+    # ---------------------------------------------------
+    # My transactions endpoint(for flutter interface)
+    # ---------------------------------------------------
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated], url_path='my')
+    def my_transactions(self, request):
+        user = request.user
+
+        qs = Transaction.objects.filter(
+            models.Q(owner=user) |
+            models.Q(borrower=user)
+        ).select_related('book', 'owner', 'borrower').order_by('-created_at')
+
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = TransactionSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = TransactionSerializer(qs, many=True)
+        return Response(serializer.data)
 
 class WishlistViewSet(viewsets.ModelViewSet):
     queryset = Wishlist.objects.all().order_by('-added_at')
