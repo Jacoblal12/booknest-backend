@@ -18,9 +18,10 @@ class BookAdmin(admin.ModelAdmin):
 # -------------------------
 @admin.register(BookRequest)
 class BookRequestAdmin(admin.ModelAdmin):
-    list_display = ("book", "requester", "request_type", "status", "created_at")
+    list_display = ("book", "requester", "request_type", "exchange_book", "status", "created_at")
     list_filter = ("request_type", "status", "created_at")
-    search_fields = ("book__title", "requester__username")
+    search_fields = ("book__title", "requester__username", "exchange_book__title")
+
 
 
 # -------------------------

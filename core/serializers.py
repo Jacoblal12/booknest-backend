@@ -41,7 +41,8 @@ class BookRequestSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['request'].user
         book = data['book']
-        request_type = data['request_type']
+        req_type = data.get("request_type")
+        exchange_book = data.get("exchange_book")
 
         # 1. Prevent requesting your own book
         if book.owner == user:
@@ -49,8 +50,8 @@ class BookRequestSerializer(serializers.ModelSerializer):
                 {"error": "You cannot request your own book."}
             )
 
-        # 2. Prevent request_type mismatch
-        if book.available_for != request_type:
+        # 2. Prevent mixed request types
+        if book.available_for != req_type:
             raise serializers.ValidationError(
                 {"error": f"This book is only available for: {book.available_for}."}
             )
@@ -67,11 +68,29 @@ class BookRequestSerializer(serializers.ModelSerializer):
                 {"error": "You already have a pending request for this book."}
             )
 
+        # 4. Exchange-specific validation
+        if req_type == "exchange":
+            if exchange_book is None:
+                raise serializers.ValidationError(
+                    {"exchange_book": "You must provide a book to exchange."}
+                )
+
+            if exchange_book.owner != user:
+                raise serializers.ValidationError(
+                    {"exchange_book": "You can only offer books that you own."}
+                )
+
+            if exchange_book == book:
+                raise serializers.ValidationError(
+                    {"exchange_book": "You cannot exchange a book with itself."}
+                )
+
         return data
 
     def create(self, validated_data):
         validated_data['requester'] = self.context['request'].user
         return super().create(validated_data)
+
 
 
 class TransactionSerializer(serializers.ModelSerializer):
