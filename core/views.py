@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework import viewsets, permissions, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
 from django.db import models
+from django.db.models import Avg, Count
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.postgres.search import TrigramSimilarity
 from .models import Announcement, Book, Feedback, Report, Wishlist
@@ -29,6 +30,18 @@ class BookViewSet(viewsets.ModelViewSet):
     filterset_fields = ['owner__id', 'available_for', 'author']
     search_fields = ['title', 'author', 'isbn', 'description']
     ordering_fields = ['created_at', 'title', 'author']
+
+    def get_queryset(self):
+        return (
+            Book.objects
+            .select_related("owner")                          # FK
+            .prefetch_related("feedbacks", "requests")        # reverse lookups
+            .annotate(
+                avg_rating=Avg("feedbacks__rating"),
+                request_count=Count("requests")
+            )
+            .order_by("-created_at")
+        )
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
