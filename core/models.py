@@ -14,6 +14,20 @@ class Book(models.Model):
         ('donate', 'Donate'),
     ]
 
+    GENRE_CHOICES = [
+        ('fiction', 'Fiction'),
+        ('nonfiction', 'Non-Fiction'),
+        ('fantasy', 'Fantasy'),
+        ('mystery', 'Mystery'),
+        ('romance', 'Romance'),
+        ('thriller', 'Thriller'),
+        ('science', 'Science'),
+        ('history', 'History'),
+        ('biography', 'Biography'),
+        ('selfhelp', 'Self Help'),
+        ('other', 'Other'),
+    ]
+
     owner = models.ForeignKey(User, related_name="books", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     author = models.CharField(max_length=255, blank=True)
@@ -21,10 +35,10 @@ class Book(models.Model):
     isbn = models.CharField(max_length=20, blank=True)
     cover = models.ImageField(upload_to="book_covers/", null=True, blank=True)
 
-    # NOW matches BookRequest request types
+    genre = models.CharField(max_length=50, choices=GENRE_CHOICES, default='other')
+
     available_for = models.CharField(max_length=20, choices=AVAILABLE_CHOICES)
 
-    # Optional GPS fields (future feature)
     location_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     location_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
@@ -33,6 +47,7 @@ class Book(models.Model):
 
     def __str__(self):
         return f"{self.title} — {self.owner.username}"
+
 
 
 # ------------------------------------------------------------

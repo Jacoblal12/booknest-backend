@@ -10,7 +10,7 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = [
-            'id', 'owner', 'title', 'author', 'description', 'isbn', 'cover',
+            'id', 'owner', 'title', 'author', 'description', 'isbn', 'cover', 'genre',
             'available_for', 'location_lat', 'location_lng',
             'created_at', 'updated_at',
             'avg_rating', 'request_count'
