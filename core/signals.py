@@ -3,17 +3,32 @@ from django.dispatch import receiver
 from .models import BookRequest, Transaction
 
 @receiver(post_save, sender=BookRequest)
-def create_transaction_on_approval(sender, instance, created, **kwargs):
-    # Only act when an existing request is updated
-    if created:
-        return  
+def create_transaction_after_approval(sender, instance, created, **kwargs):
+    if instance.status != "approved":
+        return
 
-    # If approved, create a transaction (only if one doesn't already exist)
-    if instance.status == "approved":
-        Transaction.objects.get_or_create(
-            book=instance.book,
-            owner=instance.book.owner,
-            borrower=instance.requester,
-            transaction_type=instance.request_type,
-            status="received"
-        )
+    # Avoid duplicate
+    exists = Transaction.objects.filter(
+        book=instance.book,
+        borrower=instance.requester,
+        owner=instance.book.owner,
+        transaction_type=instance.request_type,
+        status="received"
+    ).first()
+
+    if exists:
+        return
+
+    # Create Transaction
+    txn = Transaction.objects.create(
+        book=instance.book,
+        owner=instance.book.owner,
+        borrower=instance.requester,
+        transaction_type=instance.request_type,
+        status="received"
+    )
+
+    # Mark book unavailable only for RENT
+    if instance.request_type == "rent":
+        instance.book.available_for = "none"
+        instance.book.save()
