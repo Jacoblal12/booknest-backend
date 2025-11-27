@@ -28,7 +28,7 @@ class BookViewSet(viewsets.ModelViewSet):
     # Filtering, searching, ordering
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['owner__id', 'available_for', 'author']
-    search_fields = ['title', 'author', 'isbn', 'description']
+    search_fields = ['title', 'author', 'isbn', 'description', ]
     ordering_fields = ['created_at', 'title', 'author']
 
     def get_queryset(self):
@@ -109,7 +109,28 @@ class BookViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 class BookRequestViewSet(viewsets.ModelViewSet):
-    ...
+    queryset = BookRequest.objects.all().order_by('-created_at')
+    serializer_class = BookRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Add select_related for performance
+        return (
+            BookRequest.objects
+            .select_related("book", "requester", "book__owner")
+            .order_by("-created_at")
+        )
+
+    def perform_create(self, serializer):
+        """
+        Ensure requester is always the logged-in user,
+        cannot be injected via request data.
+        """
+        serializer.save(requester=self.request.user)
+
+    # ----------------------------------------------------
+    # Custom endpoint: /api/bookrequests/my/
+    # ----------------------------------------------------
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated], url_path='my')
     def my_requests(self, request):
         user = request.user
