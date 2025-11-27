@@ -1,7 +1,8 @@
 from django.shortcuts import render
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
 from django.db import models
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import Announcement, Book, Feedback, Report, Wishlist
 from .serializers import AnnouncementSerializer, BookSerializer, FeedbackSerializer, ReportSerializer, WishlistSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -19,12 +20,16 @@ class BookViewSet(viewsets.ModelViewSet):
     serializer_class = BookSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     parser_classes = (MultiPartParser, FormParser)
-    filterset_fields = ['owner__id']
+
+    # Filtering, searching, ordering
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['owner__id', 'available_for', 'author']
     search_fields = ['title', 'author', 'isbn', 'description']
-    ordering_fields = ['created_at', 'title']
+    ordering_fields = ['created_at', 'title', 'author']
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
 
 class TransactionViewSet(viewsets.ModelViewSet):
     queryset = Transaction.objects.all().order_by('-created_at')
