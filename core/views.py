@@ -3,9 +3,12 @@ from rest_framework import viewsets, permissions, filters
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, IsAdminUser
 from django.db import models
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib.postgres.search import TrigramSimilarity
 from .models import Announcement, Book, Feedback, Report, Wishlist
 from .serializers import AnnouncementSerializer, BookSerializer, FeedbackSerializer, ReportSerializer, WishlistSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from .models import Book, BookRequest, Transaction
 from .serializers import BookSerializer, TransactionSerializer
 
@@ -29,6 +32,29 @@ class BookViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    # ---------------------------------------------------
+    # Fuzzy Search Endpoint (Optional Advanced Search)
+    # ---------------------------------------------------
+    @action(detail=False, methods=['get'], url_path='fuzzy-search')
+    def fuzzy_search(self, request):
+        query = request.query_params.get('q', '').strip()
+        if not query:
+            return Response({"detail": "Missing query parameter ?q="}, status=400)
+
+        books = Book.objects.annotate(
+            similarity=TrigramSimilarity('title', query) +
+                        TrigramSimilarity('author', query) +
+                        TrigramSimilarity('description', query)
+        ).filter(similarity__gt=0.1).order_by('-similarity')
+
+        page = self.paginate_queryset(books)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(books, many=True)
+        return Response(serializer.data)
 
 
 class TransactionViewSet(viewsets.ModelViewSet):
