@@ -5,8 +5,8 @@ from django.db import models
 from django.db.models import Avg, Count
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.postgres.search import TrigramSimilarity
-from .models import Announcement, Book, Feedback, Report, Wishlist
-from .serializers import AnnouncementSerializer, BookRequestSerializer, BookSerializer, FeedbackSerializer, ReportSerializer, WishlistSerializer
+from .models import Announcement, Book, Feedback, Notification, Report, Wishlist
+from .serializers import AnnouncementSerializer, BookRequestSerializer, BookSerializer, FeedbackSerializer, NotificationSerializer, ReportSerializer, WishlistSerializer
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -236,3 +236,10 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(created_by=self.request.user)
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')

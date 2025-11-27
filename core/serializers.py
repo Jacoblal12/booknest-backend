@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.db.models import Avg, Count
-from .models import Announcement, Book, BookRequest, Feedback, Report, Transaction, Wishlist
+from .models import Announcement, Book, BookRequest, Feedback, Notification, Report, Transaction, Wishlist
 
 class BookSerializer(serializers.ModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
@@ -103,3 +103,9 @@ class AnnouncementSerializer(serializers.ModelSerializer):
         model = Announcement
         fields = "__all__"
         read_only_fields = ['created_by']
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = "__all__"
+        read_only_fields = ["user", "created_at"]
