@@ -32,6 +32,15 @@ class BookSerializer(serializers.ModelSerializer):
         return obj.requests.count()
 
 class BookRequestSerializer(serializers.ModelSerializer):
+    # 🔹 Computed / read-only fields for frontend
+    book_title = serializers.CharField(source="book.title", read_only=True)
+    book_cover = serializers.ImageField(source="book.cover", read_only=True)
+    requester_username = serializers.CharField(
+        source="requester.username", read_only=True
+    )
+    book_owner_username = serializers.CharField(
+        source="book.owner.username", read_only=True
+    )
 
     class Meta:
         model = BookRequest
@@ -39,8 +48,8 @@ class BookRequestSerializer(serializers.ModelSerializer):
         read_only_fields = ["requester", "status"]
 
     def validate(self, data):
-        user = self.context['request'].user
-        book = data['book']
+        user = self.context["request"].user
+        book = data["book"]
         req_type = data.get("request_type")
         exchange_book = data.get("exchange_book")
 
@@ -58,9 +67,7 @@ class BookRequestSerializer(serializers.ModelSerializer):
 
         # 3. Prevent duplicate PENDING requests
         existing = BookRequest.objects.filter(
-            book=book,
-            requester=user,
-            status="pending"
+            book=book, requester=user, status="pending"
         ).exists()
 
         if existing:
@@ -88,8 +95,9 @@ class BookRequestSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        validated_data['requester'] = self.context['request'].user
+        validated_data["requester"] = self.context["request"].user
         return super().create(validated_data)
+
 
 
 
