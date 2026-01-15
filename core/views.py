@@ -187,6 +187,56 @@ class BookRequestViewSet(viewsets.ModelViewSet):
 
         serializer = BookRequestSerializer(qs, many=True)
         return Response(serializer.data)
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        new_status = request.data.get("status")
+
+        if not new_status:
+            return Response(
+                {"error": "Status is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if instance.status != "pending":
+            return Response(
+                {"error": "Only pending requests can be modified."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if new_status == "cancelled":
+            if request.user != instance.requester:
+                return Response(
+                    {"error": "Only requester can cancel this request."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        elif new_status in ["approved", "rejected"]:
+            if request.user != instance.book.owner:
+                return Response(
+                    {"error": "Only book owner can approve or reject."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        else:
+            return Response(
+                {"error": "Invalid status value."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            instance.status = new_status
+            instance.save(update_fields=["status"])
+        except Exception as e:
+            print("❌ STATUS UPDATE ERROR:", e)
+            raise
+
+
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 
 
 class TransactionViewSet(viewsets.ModelViewSet):
