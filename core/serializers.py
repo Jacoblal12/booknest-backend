@@ -44,8 +44,18 @@ class BookRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BookRequest
-        fields = "__all__"
-        read_only_fields = ["requester", "status"]
+        fields = [
+            "id",
+            "request_type",
+            "status",
+            "created_at",
+            "requester_username",
+            "book_owner_username",
+            "book_title",
+            "book_cover",
+            "status",
+        ]
+        read_only_fields = [ "requester"]
 
     def validate(self, data):
         user = self.context["request"].user
